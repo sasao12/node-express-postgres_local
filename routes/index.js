@@ -35,4 +35,6 @@ const knex = require('../db/knex');
       });
   });
 
+router.use('/signup', require('./signup'));
+
 module.exports = router;
