@@ -4,6 +4,12 @@
   <title><%= title %></title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
         integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+<style>
+.completed-task {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+</style>
 </head>
 <body>
   <%- include('./header'); %>
@@ -19,9 +25,20 @@
           </form>
         </div>
         <div class="col-md-6">
-          <ul>
+          <br>
+          <ul class="list-group">
             <% for(let todo of todos){ %>
-              <li><span><%= todo.content %></span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <input type="checkbox" class="mr-2" <%= todo.completed ? 'checked' : '' %> 
+                         onchange="toggleComplete('<%= todo.id %>', this.checked)">
+                  <span class="<%= todo.completed ? 'completed-task' : '' %>"><%= todo.content %></span>
+                </div>
+                <div>
+                  <button class="btn btn-sm btn-outline-primary mr-2" onclick="editTodo('<%= todo.id %>', '<%= todo.content %>')">編集</button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo('<%= todo.id %>')">削除</button>
+                </div>
+              </li>
             <% } %>
           </ul>
         </div>
@@ -40,5 +57,53 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
           integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
           crossorigin="anonymous"></script>
-  </body>
+  <script>
+    function toggleComplete(id, completed) {
+  fetch(`/todos/${id}/toggle`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({completed})
+  }).then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('エラーが発生しました。');
+      }
+    });
+}
+    
+    function editTodo(id, currentContent) {
+      const newContent = prompt("タスクを編集してください:", currentContent);
+      if (newContent && newContent !== currentContent) {
+        fetch(`/todos/${id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({content: newContent})
+        }).then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+            } else {
+              alert('エラーが発生しました。');
+            }
+          });
+      }
+    }
+    
+    function deleteTodo(id) {
+      if (confirm("このタスクを削除してもよろしいですか？")) {
+        fetch(`/todos/${id}`, {method: 'DELETE'})
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+            } else {
+              alert('エラーが発生しました。');
+            }
+          });
+      }
+    }
+  </script>  
+</body>
 </html>
